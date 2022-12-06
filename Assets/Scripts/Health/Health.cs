@@ -10,6 +10,13 @@ public class Health : MonoBehaviour
     [SerializeField]
     private float _maxHealth = 10f;
 
+    
+    [Header("Shield")]
+    [SerializeField]
+    private float _initialShield = 5f;
+    [SerializeField]
+    private float _maxShield = 5f;
+
     [Header("Settings")]
     [SerializeField]
     private bool _destroyObject = false;
@@ -20,16 +27,27 @@ public class Health : MonoBehaviour
     private Collider2D _collider2d;
     [SerializeField]
     private SpriteRenderer _spriteRenderer;
+    [SerializeField]
+    private CharController _characterController;
 
     public float CurrentHealth { get; set; }
+    public float CurrentShield { get; set; }
+
+    private bool _shieldBroken = false;
 
     private void Awake()
     {
         _character = GetComponent<Character>();
         _collider2d = GetComponent<Collider2D>();
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        _characterController = GetComponent<CharController>();
 
         CurrentHealth = _initialHealth;
+        CurrentShield = _initialShield;
+        _shieldBroken = false;
+
+        UIManager.Instance.UpdateHealth(CurrentHealth, _maxHealth);
+        UIManager.Instance.UpdateShield(CurrentShield, _maxShield);
     }
 
     private void Update()
@@ -38,23 +56,31 @@ public class Health : MonoBehaviour
         {
             TakeDamage(1);
         }
-        if(Input.GetKeyDown(KeyCode.X))
-        {
-            Revive();
-        }
     }
 
     public void TakeDamage(float damage)
     {
-        CurrentHealth -= damage;
-        Debug.Log(CurrentHealth);
+
+        if(!_shieldBroken)
+        {
+            CurrentShield -= damage;
+            if(CurrentShield <=0)
+            {
+                _shieldBroken = true;
+            }
+        }
+        else
+        {
+            CurrentHealth -= damage;
+        }
 
         if (CurrentHealth <= 0)
         {
             CurrentHealth = 0;
             Die();
-            return;
         }
+        UIManager.Instance.UpdateHealth(CurrentHealth, _maxHealth);
+        UIManager.Instance.UpdateShield(CurrentShield, _maxShield);
     }
 
     private void Die()
@@ -63,7 +89,8 @@ public class Health : MonoBehaviour
         {
             _collider2d.enabled = false;
             _spriteRenderer.enabled = false;
-
+            _character.enabled = false;
+            _characterController.enabled = false;
         }
 
         if(_destroyObject)
@@ -72,13 +99,19 @@ public class Health : MonoBehaviour
         }
     }
 
-    private void Revive()
+    public void Revive()
     {
         if (_character != null)
         {
             _collider2d.enabled = true;
             _spriteRenderer.enabled = true;
+            _character.enabled = true;
+            _characterController.enabled = true;
             CurrentHealth = _initialHealth;
+            CurrentShield = _initialShield;
+            _shieldBroken = false;
+            UIManager.Instance.UpdateHealth(CurrentHealth, _maxHealth);
+            UIManager.Instance.UpdateShield(CurrentShield, _maxShield);
         }
 
         gameObject.SetActive(true);
