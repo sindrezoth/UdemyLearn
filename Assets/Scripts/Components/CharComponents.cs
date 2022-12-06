@@ -7,12 +7,14 @@ public class CharComponents : MonoBehaviour
     protected CharController cController;
     protected CharMovement cMovement;
     protected Animator _animator;
+    protected Character _character;
 
     protected float inputHor;
     protected float inputVer;
 
     protected virtual void Start()
     {
+        _character = GetComponent<Character>();
         cController = GetComponent<CharController>();
         cMovement = GetComponent<CharMovement>();
         _animator = GetComponent<Animator>();
